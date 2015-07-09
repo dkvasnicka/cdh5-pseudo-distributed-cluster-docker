@@ -18,9 +18,9 @@ RUN wget http://archive.cloudera.com/cdh5/ubuntu/trusty/amd64/cdh/archive.key -O
 #Install CDH package and dependencies
 RUN sudo apt-get install -y zookeeper-server && \
     sudo apt-get install -y hadoop-conf-pseudo && \
-    sudo apt-get install -y oozie && \
     sudo apt-get install -y python2.7 && \
     sudo apt-get install -y hue && \
+    sudo apt-get install -y maven && \
     sudo apt-get install -y hue-plugins
 
 #Copy updated config files
@@ -34,12 +34,49 @@ COPY conf/hue.ini /etc/hue/conf/hue.ini
 #Format HDFS
 RUN sudo -u hdfs hdfs namenode -format
 
+# --- Install Oozie from sources
+ENV MAVEN_OPTS="-XX:MaxPermSize=1g"
+RUN wget http://www.eu.apache.org/dist/oozie/4.2.0/oozie-4.2.0.tar.gz && tar xvf oozie-4.2.0.tar.gz
+
+# The original POM contains a reference to a dead Codehaus repo, which causes the build to fail
+COPY conf/oozie-pom.xml oozie-4.2.0/pom.xml
+
+# Make dist
+RUN (cd oozie-4.2.0 && bin/mkdistro.sh -DskipTests -Phadoop-2)
+
+# Add Hadoop libs both to the war and to the dist 
+ENV OOZIEDIST="/oozie-4.2.0/distro/target/oozie-4.2.0-distro/oozie-4.2.0"
+RUN rm -f $OOZIEDIST/oozie-server/webapps/oozie.war
+RUN $OOZIEDIST/bin/addtowar.sh \
+        -hadoop 2.5.0-cdh5.3.3 /usr/lib/hadoop \ 
+        -inputwar $OOZIEDIST/oozie.war \ 
+        -outputwar $OOZIEDIST/oozie-server/webapps/oozie.war
+RUN mkdir $OOZIEDIST/libext    
+RUN unzip $OOZIEDIST/oozie-server/webapps/oozie.war -d $OOZIEDIST/oozie-server/webapps/oozie
+RUN cp $OOZIEDIST/oozie-server/webapps/oozie/WEB-INF/lib/*.jar $OOZIEDIST/libext
+RUN rm -rf $OOZIEDIST/oozie-server/webapps/oozie        
+COPY conf/oozie-site.xml $OOZIEDIST/conf/oozie-site.xml
+
+# Move into place
+RUN cp -R $OOZIEDIST /usr/lib/oozie
+
+# Setup user
+RUN sudo mkdir /var/lib/oozie    
+RUN sudo adduser \
+                  --system \
+                  --disabled-login \
+                  --group \
+                  --home /var/lib/oozie \
+                  --gecos "Oozie User" \
+                  --shell /bin/false \
+                  oozie  >/dev/null 
+RUN sudo chown -R oozie:oozie /var/lib/oozie                  
+# --- Oozie install done
+
 COPY conf/run-hadoop.sh /usr/bin/run-hadoop.sh
 RUN chmod +x /usr/bin/run-hadoop.sh
 
-RUN sudo -u oozie /usr/lib/oozie/bin/ooziedb.sh create -run && \
-    wget http://archive.cloudera.com/gplextras/misc/ext-2.2.zip -O ext.zip && \
-    unzip ext.zip -d /var/lib/oozie
+RUN sudo /usr/lib/oozie/bin/ooziedb.sh create -run
 
 # NameNode (HDFS)
 EXPOSE 8020 50070

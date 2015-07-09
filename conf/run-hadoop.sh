@@ -19,9 +19,9 @@ sudo -u hdfs hadoop fs -chown hdfs /user/hdfs
 #init oozie
 sudo -u hdfs hadoop fs -mkdir /user/oozie
 sudo -u hdfs hadoop fs -chown oozie:oozie /user/oozie
-sudo oozie-setup sharelib create -fs hdfs://localhost:8020 -locallib /usr/lib/oozie/oozie-sharelib-yarn.tar.gz
+sudo /usr/lib/oozie/bin/oozie-setup.sh sharelib create -fs hdfs://localhost:8020 -locallib /usr/lib/oozie/oozie-sharelib-4.2.0.tar.gz
 
-service oozie start
+sudo /usr/lib/oozie/bin/oozied.sh start
 
 service hue start
 
