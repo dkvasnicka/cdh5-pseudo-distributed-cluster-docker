@@ -54,6 +54,7 @@ RUN $OOZIEDIST/bin/addtowar.sh \
 RUN mkdir $OOZIEDIST/libext    
 RUN unzip $OOZIEDIST/oozie-server/webapps/oozie.war -d $OOZIEDIST/oozie-server/webapps/oozie
 RUN cp $OOZIEDIST/oozie-server/webapps/oozie/WEB-INF/lib/*.jar $OOZIEDIST/libext
+RUN cp -n $OOZIEDIST/oozie-server/lib/*.jar $OOZIEDIST/libext
 RUN rm -rf $OOZIEDIST/oozie-server/webapps/oozie        
 COPY conf/oozie-site.xml $OOZIEDIST/conf/oozie-site.xml
 
@@ -71,12 +72,13 @@ RUN sudo adduser \
                   --shell /bin/false \
                   oozie  >/dev/null 
 RUN sudo chown -R oozie:oozie /var/lib/oozie                  
+RUN sudo chown -R oozie:oozie /usr/lib/oozie  
 # --- Oozie install done
 
 COPY conf/run-hadoop.sh /usr/bin/run-hadoop.sh
 RUN chmod +x /usr/bin/run-hadoop.sh
 
-RUN sudo /usr/lib/oozie/bin/ooziedb.sh create -run
+RUN sudo -u oozie /usr/lib/oozie/bin/ooziedb.sh create -run
 
 # NameNode (HDFS)
 EXPOSE 8020 50070
