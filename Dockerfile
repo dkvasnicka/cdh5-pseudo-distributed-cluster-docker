@@ -75,7 +75,7 @@ RUN sudo chown -R oozie:oozie /var/lib/oozie
 RUN sudo chown -R oozie:oozie /usr/lib/oozie 
 
 # Fetch YARN-compatible Spark, will be set up during start once HDFS is up
-RUN wget http://archive.apache.org/dist/spark/spark-1.1.0/spark-1.1.0-bin-hadoop2.4.tgz && tar xvf spark-1.1.0-bin-hadoop2.4.tgz
+RUN wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.4.tgz && tar xvf spark-1.4.1-bin-hadoop2.4.tgz
 
 # --- Oozie install done
 
