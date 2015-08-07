@@ -74,9 +74,8 @@ RUN sudo adduser \
 RUN sudo chown -R oozie:oozie /var/lib/oozie                  
 RUN sudo chown -R oozie:oozie /usr/lib/oozie 
 
-# Fetch YARN-compatible Spark and Avro support JAR, will be set up during start once HDFS is up
+# Fetch YARN-compatible Spark, will be set up during start once HDFS is up
 RUN wget http://d3kbcqa49mib13.cloudfront.net/spark-1.4.1-bin-hadoop2.4.tgz && tar xvf spark-1.4.1-bin-hadoop2.4.tgz
-RUN wget "https://search.maven.org/remotecontent?filepath=com/databricks/spark-avro_2.10/1.0.0/spark-avro_2.10-1.0.0.jar" -O spark-avro_2.10-1.0.0.jar
 
 # --- Oozie install done
 
